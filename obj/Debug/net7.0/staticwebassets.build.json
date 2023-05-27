@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "QVlplOn0hRbQoAceigO/fEDWv3RZM88raPfzrei6Vy8=",
+  "Source": "tgbotapi",
+  "BasePath": "_content/tgbotapi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
