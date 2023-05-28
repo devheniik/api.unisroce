@@ -42,17 +42,30 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
-
         return Ok(user);
     }
     
     [HttpGet]
     [Route("api/{chatId}/users")]
-    public async Task<IActionResult> UpdateSubject([FromRoute] string chatId)
+    public async Task<IActionResult> GetUser([FromRoute] string chatId)
     {
         var user = await this.GetUserByChatId(chatId);
 
         return Ok(user);
+    }
+    
+    [HttpGet]
+    [Route("api/{chatId}/users/check")]
+    public async Task<IActionResult> CheckUserExist([FromRoute] string chatId)
+    {
+        var user_count = _dbContext.Users.Where(u => u.ChatId == chatId).Count();
+
+        if (user_count > 0)
+        {
+            return Ok(true);
+        }
+
+        return Ok(false);
     }
     
     [HttpPut]
@@ -73,7 +86,7 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
 
     // Api
 
-    [HttpPost]
+    [HttpGet]
     [Route("api/groups")]
     public async Task<IActionResult> GetGroups()
     {
@@ -123,7 +136,7 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
         
         await _dbContext.SaveChangesAsync();
         
-        return Ok("Success");
+        return Ok(1);
     }
 
 // Subjects
@@ -138,19 +151,6 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
 
         return Ok(
             subjects
-        );
-    }
-
-    [HttpGet]
-    [Route("api/{chatId}/subjects/{id:guid}/events")]
-    public async Task<IActionResult> GetUserSubjectEvents([FromRoute] string chatId, [FromRoute] Guid id)
-    {
-        var user = await this.GetUserByChatId(chatId);
-        var subject = await this.GetSubject(user, id);
-
-        var events = await _dbContext.Events.Where(e => e.SubjectId == subject.Id).ToListAsync();
-        return Ok(
-            events
         );
     }
 
@@ -225,11 +225,17 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
         var user = await this.GetUserByChatId(chatId);
         var subject = await this.GetSubject(user, id);
 
+        var events = await _dbContext.Events.Where(e => e.SubjectId == subject.Id).ToListAsync();
+        
+        foreach (var _event in events)
+        {
+            _dbContext.Events.Remove(_event);
+        }
 
         _dbContext.Remove(subject);
         await _dbContext.SaveChangesAsync();
 
-        return Ok();
+        return Ok(true);
     }
 
 // Events
@@ -240,8 +246,25 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
         var user = await this.GetUserByChatId(chatId);
 
         var events = await _dbContext.Events.Where(s => s.UserId == user.Id).ToListAsync();
+        
+        var response = new List<TransformerEvent>();
+
+        foreach (var _event in events)
+        {
+            var tempEvent = new TransformerEvent()
+            {
+                Id = _event.Id,
+                Name = _event.Name,
+                Mark = _event.Mark,
+                SubjectId = _event.SubjectId,
+                SubjectName = _dbContext.Subjects.Where(s => s.Id == _event.SubjectId).FirstOrDefault().Name
+            };
+            
+            response.Add(tempEvent);
+        }
+        
         return Ok(
-            events
+            response
         );
     }
 
@@ -278,7 +301,7 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
         _dbContext.Remove(_event);
         await _dbContext.SaveChangesAsync();
 
-        return Ok();
+        return Ok(true);
     }
 
 // Services
@@ -327,7 +350,6 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
     
     private async Task<string[]> GetSubjectNames(User user)
     {
-
         if (user.GroupId == null)
         {
             BadRequest("User without group");
