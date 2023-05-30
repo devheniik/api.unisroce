@@ -70,7 +70,7 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
     
     [HttpPut]
     [Route("api/{chatId}/users/update")]
-    public async Task<IActionResult> UpdateSubject([FromRoute] string chatId, UpdateUserMetaData request)
+    public async Task<IActionResult> UpdateUser([FromRoute] string chatId, UpdateUserMetaData request)
     {
         var user = await this.GetUserByChatId(chatId);
 
@@ -241,7 +241,7 @@ public class Controller : Microsoft.AspNetCore.Mvc.Controller
 // Events
     [HttpGet]
     [Route("api/{chatId}/events")]
-    public async Task<IActionResult> GetEventEvents([FromRoute] string chatId)
+    public async Task<IActionResult> GetEvents([FromRoute] string chatId)
     {
         var user = await this.GetUserByChatId(chatId);
 
